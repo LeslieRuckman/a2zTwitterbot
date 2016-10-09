@@ -1,4 +1,10 @@
 //Leslie Ruckman built this as part of homework for A2Z Fall 2016
+// Goals for this project:
+// Have a selection of random mantras that can be iterated on
+// Use randomness to select a random word
+// Use random numbers to select which mantra to tweet.
+// Tweet 1 machine mantra per day
+// Reply to others with a new mantra
 
 console.log("this is mantra machine.");
 
@@ -26,13 +32,44 @@ var stream = T.stream('user');
 // See: https://dev.twitter.com/streaming/userstreams
 stream.on('tweet', tweetEvent);
 
+// Trigger a tweet by tweeting @ the bot
+function tweetEvent(eventMsg){
+  // var fs = require('fs');
+  // var json = JSON.stringify(eventMsg, null,2);
+  // fs.writeFile("tweet.json",json);
+
+  var reply_to = eventMsg.in_reply_to_screen_name;
+  var sender = eventMsg.user.screen_name;
+  var txt = eventMsg.text;
+  var tweetMsg = processRita();
+
+  if(reply_to === 'mantra_machine'){
+    var replyText = '@'+ sender + " "+ tweetMsg;
+
+    T.post('statuses/update',
+    {status: replyText}
+    , tweeted);
+
+    function tweeted(err, data, response) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log('Success:' + data.text);
+        }
+    }
+  }
+}
+
+
 // Start once
 tweeter();
 
 // Once every 3min to test that it's working
-setInterval(tweeter, 180000);
+// setInterval(tweeter, 180000);
+
 // Once everyday once it's ready for launch
-// setInterval(tweeter, 24 * 3,600,000);
+setInterval(tweeter, 24 * 3,600,000);
+
 
 function tweeter() {
 
@@ -50,29 +87,6 @@ function tweeter() {
             console.log('Success:' + data.text);
         }
     };
-}
-
-// Trigger a tweet by tweeting @ the bot
-function tweetEvent(tweet){
-  var reply_to = tweet.in_reply_to_screen_name;
-  var name = tweet.user.screen_name;
-  var txt = tweet.text;
-  var replyText = '@'+ name;
-  var tweet = processRita();
-
-
-  T.post('statuses/update',
-  {status: replyText + " " +tweet}
-  , tweeted);
-
-  function tweeted(err, data, response) {
-      if (err) {
-          console.log(err);
-      } else {
-          console.log('Success:' + data.text);
-      }
-  };
-
 }
 
 
@@ -125,12 +139,3 @@ function processRita() {
     return mantra;
 
 }
-
-
-
-// Goals for this project:
-// I want to have a selection of random mantras that can be generated
-// I can use randomness to select a random word
-// I can use random numbers to select which sentence to tweet.
-// I want to have the mantra display 1 per day
-// I want to have the mantra machine produce a new mantra when someone tweets at it
